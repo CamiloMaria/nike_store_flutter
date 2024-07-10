@@ -49,7 +49,9 @@ class _CartItemState extends State<CartItem> {
           borderRadius: BorderRadius.circular(20),
         ),
         child: ListTile(
-          leading: Image.asset(widget.shoe.picture, width: 50, height: 50),
+          leading: widget.shoe.picture != null && widget.shoe.picture.isNotEmpty
+              ? Image.asset(widget.shoe.picture, width: 50, height: 50)
+              : Icon(Icons.image_not_supported, size: 50),
           title: Text(widget.shoe.name),
           subtitle: Text('\$${widget.shoe.price}'),
           trailing: IconButton(

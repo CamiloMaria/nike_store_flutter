@@ -1,12 +1,12 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nike_store/models/shoe.dart';
 
-class ShoesTitle extends StatelessWidget {
-  const ShoesTitle({super.key, required this.shoes, required this.onTap});
+class ShoesTile extends StatelessWidget {
+  const ShoesTile({Key? key, required this.shoe, required this.onTap})
+      : super(key: key);
 
-  final Shoe shoes;
-  final void Function()? onTap;
+  final Shoe shoe;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -22,11 +22,11 @@ class ShoesTitle extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Colors.grey,
-            blurRadius: 2,
-            offset: Offset(0, 2),
+            color: Colors.grey.shade500,
+            blurRadius: 5,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -35,7 +35,7 @@ class ShoesTitle extends StatelessWidget {
         children: [
           _buildShoeImage(),
           _buildShoeDetails(context),
-          _buildAddButton(),
+          _buildAddButton(context),
         ],
       ),
     );
@@ -44,13 +44,14 @@ class ShoesTitle extends StatelessWidget {
   Widget _buildShoeImage() {
     return Expanded(
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         child: Image.asset(
-          shoes.picture,
+          shoe.picture,
           width: 200,
           height: 200,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
+          errorBuilder: (context, error, stackTrace) =>
+              const Icon(Icons.error_outline, size: 50),
         ),
       ),
     );
@@ -58,27 +59,30 @@ class ShoesTitle extends StatelessWidget {
 
   Widget _buildShoeDetails(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
-            shoes.name,
+            shoe.name,
             style: Theme.of(context)
                 .textTheme
                 .titleLarge
                 ?.copyWith(fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
           ),
           Text(
-            '\$${shoes.price}',
+            '\$${shoe.price}',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: Colors.redAccent,
-                fontWeight: FontWeight.bold,
-                fontSize: 25),
+                  color: Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
-            shoes.description,
-            style: Theme.of(context).textTheme.titleMedium,
+            shoe.description,
+            style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
         ],
@@ -86,38 +90,35 @@ class ShoesTitle extends StatelessWidget {
     );
   }
 
-  Widget _buildAddButton() {
+  Widget _buildAddButton(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
+      child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
         decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.only(
+          gradient: const LinearGradient(
+            colors: [Colors.deepOrange, Colors.red],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: const BorderRadius.only(
             bottomLeft: Radius.circular(20),
             bottomRight: Radius.circular(20),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withOpacity(0.25),
               spreadRadius: 0,
-              blurRadius: 10,
-              offset: Offset(0, 3),
+              blurRadius: 4,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.add_shopping_cart, color: Colors.white),
-            SizedBox(width: 8),
-            Text(
-              'Add to Cart',
-              style:
-                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-          ],
+        child: const Center(
+          child: Text(
+            'Add to Cart',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
         ),
       ),
     );

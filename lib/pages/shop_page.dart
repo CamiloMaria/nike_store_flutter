@@ -2,7 +2,7 @@ import 'package:anim_search_bar/anim_search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:nike_store/models/cart.dart';
 import 'package:nike_store/models/shoe.dart';
-import 'package:nike_store/widgets/shoes_title.dart';
+import 'package:nike_store/widgets/shoes_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -15,6 +15,12 @@ class ShopPage extends StatefulWidget {
 
 class _ShopPageState extends State<ShopPage> {
   final TextEditingController _textController = TextEditingController();
+  List<String> inspirationalQuotes = [
+    "Everyone flies... some fly longer than others.",
+    "The only limit is the one you set yourself.",
+    "Dream big and dare to fail."
+  ];
+  String selectedQuote = "";
 
   Stream<List<Shoe>> fetchShoesFromFirestore() {
     return FirebaseFirestore.instance
@@ -58,6 +64,12 @@ class _ShopPageState extends State<ShopPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    selectedQuote = (inspirationalQuotes..shuffle()).first;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Consumer<Cart>(
@@ -67,19 +79,7 @@ class _ShopPageState extends State<ShopPage> {
               _buildSearchBar(),
               _buildInspirationalQuote(),
               _buildHotPicksHeader(context),
-              StreamBuilder<List<Shoe>>(
-                stream: fetchShoesFromFirestore(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  }
-                  if (!snapshot.hasData) {
-                    return Center(child: Text('No shoes found'));
-                  }
-                  // Update the _buildShoesList method to work with Firestore data
-                  return _buildShoesList(snapshot.data!);
-                },
-              ),
+              _buildShoesGrid(),
             ],
           ),
         ),
@@ -94,16 +94,16 @@ class _ShopPageState extends State<ShopPage> {
         width: 480,
         textController: _textController,
         onSuffixTap: () => _textController.clear(),
-        onSubmitted: (value) => print(value),
+        onSubmitted: (value) => setState(() {}),
       ),
     );
   }
 
   Widget _buildInspirationalQuote() {
-    return const Padding(
+    return Padding(
       padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
       child: Text(
-        'Everyone flies... some fly longer than others.',
+        selectedQuote,
         style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
       ),
     );
@@ -114,34 +114,48 @@ class _ShopPageState extends State<ShopPage> {
       padding: const EdgeInsets.all(20.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: const [
-          Text(
+        children: [
+          const Text(
             'Hot Picks',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
-          Text(
-            'View All',
-            style: TextStyle(fontSize: 20, color: Colors.grey),
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: () => setState(() {}),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildShoesList(List<Shoe> shoes) {
-    return SizedBox(
-      height: 280,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: shoes.length,
-        itemBuilder: (context, index) {
-          Shoe shoe = shoes[index];
-          return ShoesTitle(
-            shoes: shoe,
-            onTap: () => addShoeToCart(shoe),
-          );
-        },
-      ),
+  Widget _buildShoesGrid() {
+    return StreamBuilder<List<Shoe>>(
+      stream: fetchShoesFromFirestore(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(child: Text('No shoes found'));
+        }
+        var shoes = snapshot.data!;
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 0.75,
+          ),
+          itemCount: shoes.length,
+          itemBuilder: (context, index) {
+            Shoe shoe = shoes[index];
+            return ShoesTile(
+              shoe: shoe,
+              onTap: () => addShoeToCart(shoe),
+            );
+          },
+        );
+      },
     );
   }
 }
