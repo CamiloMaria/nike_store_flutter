@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nike_store/models/cart.dart';
@@ -13,6 +14,31 @@ class CartItem extends StatefulWidget {
 }
 
 class _CartItemState extends State<CartItem> {
+  void removeFromCart(Shoe shoe) async {
+    Provider.of<Cart>(context, listen: false).removeFromCart(shoe);
+
+    try {
+      await FirebaseFirestore.instance.collection('cart').doc(shoe.id).delete();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Removed from Cart and Firestore'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error removing from Firestore: $error'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -29,8 +55,7 @@ class _CartItemState extends State<CartItem> {
           trailing: IconButton(
             icon: const Icon(Icons.delete),
             onPressed: () {
-              Provider.of<Cart>(context, listen: false)
-                  .removeFromCart(widget.shoe);
+              removeFromCart(widget.shoe);
             },
           ),
         ),

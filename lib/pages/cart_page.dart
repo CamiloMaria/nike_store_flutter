@@ -1,22 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:nike_store/models/cart.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:nike_store/models/shoe.dart';
 import 'package:nike_store/widgets/cart_item.dart';
-import 'package:provider/provider.dart';
 
 class CartPage extends StatelessWidget {
   const CartPage({super.key});
 
+  Stream<List<Shoe>> fetchCartsFromFirestore() {
+    return FirebaseFirestore.instance
+        .collection('cart')
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => Shoe.fromFirestore(doc.data()))
+          .toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text('Cart'),
-          backgroundColor: Colors.white,
-          centerTitle: true,
-          automaticallyImplyLeading: false,
-        ),
-        body: Consumer<Cart>(builder: (context, value, child) {
-          if (value.cart.isEmpty) {
+      appBar: AppBar(
+        title: const Text('Cart'),
+        backgroundColor: Colors.white,
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+      ),
+      body: StreamBuilder<List<Shoe>>(
+        stream: fetchCartsFromFirestore(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data?.isEmpty == true) {
             return Center(
               child: Text(
                 'Your cart is empty',
@@ -27,14 +43,19 @@ class CartPage extends StatelessWidget {
           return Column(
             children: [
               Expanded(
-                  child: ListView.builder(
-                      itemCount: value.cart.length,
-                      itemBuilder: (context, index) {
-                        final shoe = value.getCart[index];
-                        return CartItem(shoe: shoe);
-                      }))
+                child: ListView.builder(
+                  itemCount: snapshot.data?.length ?? 0,
+                  itemBuilder: (context, index) {
+                    var doc = snapshot.data?[index];
+                    var shoe = Shoe.fromFirestore(doc!.toMap());
+                    return CartItem(shoe: shoe);
+                  },
+                ),
+              ),
             ],
           );
-        }));
+        },
+      ),
+    );
   }
 }

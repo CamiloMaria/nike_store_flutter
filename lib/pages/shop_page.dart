@@ -4,6 +4,7 @@ import 'package:nike_store/models/cart.dart';
 import 'package:nike_store/models/shoe.dart';
 import 'package:nike_store/widgets/shoes_title.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ShopPage extends StatefulWidget {
   const ShopPage({super.key});
@@ -15,14 +16,45 @@ class ShopPage extends StatefulWidget {
 class _ShopPageState extends State<ShopPage> {
   final TextEditingController _textController = TextEditingController();
 
-  void addShoeToCart(Shoe shoe) {
+  Stream<List<Shoe>> fetchShoesFromFirestore() {
+    return FirebaseFirestore.instance
+        .collection('shoes')
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => Shoe.fromFirestore(doc.data()))
+          .toList();
+    });
+  }
+
+  void addShoeToCart(Shoe shoe) async {
+    // Generate a unique ID for the shoe
+    String uniqueId = DateTime.now().millisecondsSinceEpoch.toString();
+    shoe.id = uniqueId;
+
     Provider.of<Cart>(context, listen: false).addToCart(shoe);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Added to Cart'),
-        duration: Duration(seconds: 1),
-      ),
-    );
+
+    Map<String, dynamic> shoeData = shoe.toMap();
+
+    await FirebaseFirestore.instance
+        .collection('cart')
+        .doc(uniqueId)
+        .set(shoeData)
+        .then((docRef) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Added to Cart and saved to Firestore'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    }).catchError((error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error adding to Firestore: $error'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    });
   }
 
   @override
@@ -35,7 +67,19 @@ class _ShopPageState extends State<ShopPage> {
               _buildSearchBar(),
               _buildInspirationalQuote(),
               _buildHotPicksHeader(context),
-              _buildShoesList(cart),
+              StreamBuilder<List<Shoe>>(
+                stream: fetchShoesFromFirestore(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData) {
+                    return Center(child: Text('No shoes found'));
+                  }
+                  // Update the _buildShoesList method to work with Firestore data
+                  return _buildShoesList(snapshot.data!);
+                },
+              ),
             ],
           ),
         ),
@@ -84,14 +128,14 @@ class _ShopPageState extends State<ShopPage> {
     );
   }
 
-  Widget _buildShoesList(Cart cart) {
+  Widget _buildShoesList(List<Shoe> shoes) {
     return SizedBox(
       height: 280,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: cart.getShoes.length,
+        itemCount: shoes.length,
         itemBuilder: (context, index) {
-          Shoe shoe = cart.getShoes[index];
+          Shoe shoe = shoes[index];
           return ShoesTitle(
             shoes: shoe,
             onTap: () => addShoeToCart(shoe),
