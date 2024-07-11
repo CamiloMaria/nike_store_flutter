@@ -6,7 +6,7 @@ class ShoesTile extends StatelessWidget {
       : super(key: key);
 
   final Shoe shoe;
-  final VoidCallback onTap;
+  final Function()? onTap;
 
   @override
   Widget build(BuildContext context) {

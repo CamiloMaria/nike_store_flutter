@@ -1,9 +1,7 @@
 import 'package:anim_search_bar/anim_search_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:nike_store/models/cart.dart';
 import 'package:nike_store/models/shoe.dart';
 import 'package:nike_store/widgets/shoes_tile.dart';
-import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ShopPage extends StatefulWidget {
@@ -34,13 +32,10 @@ class _ShopPageState extends State<ShopPage> {
   }
 
   void addShoeToCart(Shoe shoe) async {
-    // Generate a unique ID for the shoe
     String uniqueId = DateTime.now().millisecondsSinceEpoch.toString();
     shoe.id = uniqueId;
 
-    Provider.of<Cart>(context, listen: false).addToCart(shoe);
-
-    Map<String, dynamic> shoeData = shoe.toMap();
+    final shoeData = shoe.toMap();
 
     await FirebaseFirestore.instance
         .collection('cart')
@@ -72,16 +67,14 @@ class _ShopPageState extends State<ShopPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Consumer<Cart>(
-        builder: (context, cart, child) => SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildSearchBar(),
-              _buildInspirationalQuote(),
-              _buildHotPicksHeader(context),
-              _buildShoesGrid(),
-            ],
-          ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            _buildSearchBar(),
+            _buildInspirationalQuote(),
+            _buildHotPicksHeader(context),
+            _buildShoesGrid(),
+          ],
         ),
       ),
     );

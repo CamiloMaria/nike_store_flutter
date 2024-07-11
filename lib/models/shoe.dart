@@ -12,7 +12,7 @@ class Shoe {
       required this.price,
       required this.description});
 
-  Map<String, dynamic> toMap() {
+  toMap() {
     return {
       'id': id,
       'name': name,
@@ -22,7 +22,7 @@ class Shoe {
     };
   }
 
-  factory Shoe.fromFirestore(Map<String, dynamic> data) {
+  factory Shoe.fromFirestore(data) {
     return Shoe(
       id: data['id'],
       name: data['name'],

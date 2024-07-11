@@ -15,11 +15,11 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
-  List _pages = [
-    ShopPage(),
-    SearchPage(),
-    CartPage(),
-    ProfilePage(),
+  final List _pages = [
+    const ShopPage(),
+    const SearchPage(),
+    const CartPage(),
+    const ProfilePage(),
   ];
 
   void navigateToPage(int index) {

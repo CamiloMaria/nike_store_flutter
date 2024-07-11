@@ -1,9 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:nike_store/models/cart.dart';
 import 'package:nike_store/models/shoe.dart';
-import 'package:provider/provider.dart';
 
 class CartItem extends StatefulWidget {
   const CartItem({super.key, required this.shoe});
@@ -15,8 +12,6 @@ class CartItem extends StatefulWidget {
 
 class _CartItemState extends State<CartItem> {
   void removeFromCart(Shoe shoe) async {
-    Provider.of<Cart>(context, listen: false).removeFromCart(shoe);
-
     try {
       await FirebaseFirestore.instance.collection('cart').doc(shoe.id).delete();
       if (mounted) {
